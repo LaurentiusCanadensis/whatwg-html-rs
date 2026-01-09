@@ -1,0 +1,41 @@
+[package]
+name = "justhtml"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "A WHATWG HTML5 spec-compliant parser with sanitization and CSS selectors"
+keywords = ["html", "html5", "parser", "sanitizer", "selector"]
+categories = ["parser-implementations", "web-programming"]
+repository = "https://github.com/EmilStenstrom/justhtml"
+homepage = "https://github.com/EmilStenstrom/justhtml"
+documentation = "https://docs.rs/justhtml"
+readme = "README.md"
+rust-version = "1.70"
+
+[dependencies]
+thiserror = "2.0"
+smallvec = "1.13"
+compact_str = "0.8"
+once_cell = "1.19"
+regex = "1.10"
+url = "2.5"
+encoding_rs = "0.8"
+urlencoding = "2.1"
+
+# GUI dependencies (optional)
+iced = { version = "0.14", optional = true }
+
+[dev-dependencies]
+criterion = "0.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+proptest = "1.4"
+
+[features]
+default = []
+gui = ["iced"]
+
+[[bin]]
+name = "justhtml-gui"
+path = "src/bin/gui.rs"
+required-features = ["gui"]
