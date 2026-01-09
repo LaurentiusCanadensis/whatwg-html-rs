@@ -12,7 +12,7 @@
 //! # Example
 //!
 //! ```
-//! use justhtml::{parse, Tokenizer};
+//! use whatwg_html_rs::{parse, Tokenizer};
 //!
 //! // Parse HTML into a DOM tree
 //! let result = parse("<html><body><p>Hello World</p></body></html>");
@@ -69,7 +69,7 @@ impl ParseResult {
 /// # Example
 ///
 /// ```
-/// let result = justhtml::parse("<html><body>Hello</body></html>");
+/// let result = whatwg_html_rs::parse("<html><body>Hello</body></html>");
 /// println!("Document has {} nodes", result.dom.len());
 /// ```
 pub fn parse(html: &str) -> ParseResult {
@@ -87,7 +87,7 @@ pub fn parse(html: &str) -> ParseResult {
 /// # Example
 ///
 /// ```
-/// let result = justhtml::parse_with_errors("<p>Unclosed paragraph");
+/// let result = whatwg_html_rs::parse_with_errors("<p>Unclosed paragraph");
 /// for error in &result.errors {
 ///     println!("Error: {}", error);
 /// }
@@ -110,7 +110,7 @@ pub fn parse_with_errors(html: &str) -> ParseResult {
 /// # Example
 ///
 /// ```ignore
-/// let result = justhtml::parse_fragment("<li>Item 1</li><li>Item 2</li>", "ul");
+/// let result = whatwg_html_rs::parse_fragment("<li>Item 1</li><li>Item 2</li>", "ul");
 /// ```
 pub fn parse_fragment(_html: &str, _context: &str) -> ParseResult {
     // TODO: Implement fragment parsing with context

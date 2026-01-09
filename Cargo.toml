@@ -1,14 +1,14 @@
 [package]
-name = "justhtml"
+name = "whatwg-html-rs"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "A WHATWG HTML5 spec-compliant parser with sanitization and CSS selectors"
 keywords = ["html", "html5", "parser", "sanitizer", "selector"]
 categories = ["parser-implementations", "web-programming"]
-repository = "https://github.com/EmilStenstrom/justhtml"
-homepage = "https://github.com/EmilStenstrom/justhtml"
-documentation = "https://docs.rs/justhtml"
+repository = "https://github.com/LaurentiusCanadensis/whatwg-html-rs"
+homepage = "https://github.com/LaurentiusCanadensis/whatwg-html-rs"
+documentation = "https://docs.rs/whatwg-html-rs"
 readme = "README.md"
 rust-version = "1.70"
 
@@ -37,6 +37,6 @@ default = []
 gui = ["iced"]
 
 [[bin]]
-name = "justhtml-gui"
+name = "whatwg-html-gui"
 path = "src/bin/gui.rs"
 required-features = ["gui"]

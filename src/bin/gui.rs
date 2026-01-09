@@ -2,7 +2,7 @@
 
 use iced::widget::{button, column, container, pick_list, row, scrollable, text, text_editor, text_input};
 use iced::{Element, Length, Task, Theme};
-use justhtml::{parse, sanitize::{sanitize_dom, DEFAULT_POLICY}, selector::query_all, serialize::serialize_to_html, NodeKind};
+use whatwg_html_rs::{parse, sanitize::{sanitize_dom, DEFAULT_POLICY}, selector::query_all, serialize::serialize_to_html, NodeKind};
 
 fn main() -> iced::Result {
     iced::application(App::default, App::update, App::view)
@@ -223,13 +223,13 @@ impl App {
 }
 
 /// Extract plain text from DOM, recursively traversing nodes.
-fn extract_text(dom: &justhtml::Dom, node_id: justhtml::NodeId) -> String {
+fn extract_text(dom: &whatwg_html_rs::Dom, node_id: whatwg_html_rs::NodeId) -> String {
     let mut result = String::new();
     extract_text_recursive(dom, node_id, &mut result);
     result
 }
 
-fn extract_text_recursive(dom: &justhtml::Dom, node_id: justhtml::NodeId, result: &mut String) {
+fn extract_text_recursive(dom: &whatwg_html_rs::Dom, node_id: whatwg_html_rs::NodeId, result: &mut String) {
     let node = dom.get(node_id);
 
     match &node.kind {

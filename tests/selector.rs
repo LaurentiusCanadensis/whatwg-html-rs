@@ -1,6 +1,6 @@
 //! CSS selector tests.
 
-use justhtml::{parse, selector::{query, query_all, matches_selector, parse_selector}};
+use whatwg_html_rs::{parse, selector::{query, query_all, matches_selector, parse_selector}};
 
 fn query_count(html: &str, selector: &str) -> usize {
     let result = parse(html);

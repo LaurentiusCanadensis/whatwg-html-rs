@@ -1,6 +1,6 @@
 //! Performance benchmark with various HTML file sizes.
 
-use justhtml::{parse, selector::query_all};
+use whatwg_html_rs::{parse, selector::query_all};
 use std::time::Instant;
 
 fn generate_html(target_kb: usize) -> String {

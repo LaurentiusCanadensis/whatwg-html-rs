@@ -1,6 +1,6 @@
 //! Serialization and round-trip tests.
 
-use justhtml::{parse, serialize::serialize_to_html};
+use whatwg_html_rs::{parse, serialize::serialize_to_html};
 
 fn round_trip(html: &str) -> String {
     let result = parse(html);
