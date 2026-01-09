@@ -1,8 +1,17 @@
-# JustHTML (Rust)
+# whatwg-html-rs
 
 A WHATWG HTML5 spec-compliant parser with sanitization and CSS selectors.
 
-This is the Rust implementation of [JustHTML](https://github.com/EmilStenstrom/justhtml), providing **14-19x faster parsing** and **90-105x faster serialization** compared to the Python version.
+A fast Rust HTML5 parser providing **14-19x faster parsing** and **90-105x faster serialization** compared to pure Python implementations.
+
+## Use Cases
+
+- **Web Scraping** - Extract data from HTML with CSS selectors, handles malformed markup gracefully
+- **Content Sanitization** - Clean user-generated HTML before storage or display, prevent XSS attacks
+- **HTML Transformation** - Parse, modify, and re-serialize HTML documents
+- **Email Processing** - Safely render HTML emails by stripping dangerous elements
+- **Static Site Generators** - Process HTML templates with proper error recovery
+- **Security Auditing** - Analyze HTML for potentially malicious content
 
 ## Features
 
@@ -14,7 +23,7 @@ This is the Rust implementation of [JustHTML](https://github.com/EmilStenstrom/j
 ## Usage
 
 ```rust
-use justhtml::{parse, parse_fragment};
+use whatwg_html_rs::{parse, parse_fragment};
 
 // Parse a full document
 let doc = parse("<html><body><p>Hello!</p></body></html>");
@@ -37,7 +46,7 @@ println!("{}", clean.to_html());
 The sanitizer removes potentially dangerous content by default:
 
 ```rust
-use justhtml::parse_fragment;
+use whatwg_html_rs::parse_fragment;
 
 let doc = parse_fragment(
     r#"<p>Hello<script>alert(1)</script> <a href="javascript:alert(1)">bad</a></p>"#,
@@ -76,7 +85,7 @@ See [BENCHMARK.md](BENCHMARK.md) for detailed benchmarks.
 A simple Iced-based GUI is available:
 
 ```bash
-cargo run --release --features gui --bin justhtml-gui
+cargo run --release --features gui --bin whatwg-html-gui
 ```
 
 ## License

@@ -1,7 +1,7 @@
 //! Tokenizer edge case tests.
 
-use justhtml::{Token, Tokenizer};
-use justhtml::tokenizer::TagKind;
+use whatwg_html_rs::{Token, Tokenizer};
+use whatwg_html_rs::tokenizer::TagKind;
 
 fn tokenize(html: &str) -> Vec<Token> {
     Tokenizer::new(html).collect()

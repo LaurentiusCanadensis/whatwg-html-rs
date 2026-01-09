@@ -1,6 +1,6 @@
 //! Performance benchmark with 10MB HTML file.
 
-use justhtml::{parse, selector::query_all};
+use whatwg_html_rs::{parse, selector::query_all};
 use std::time::Instant;
 
 fn generate_10mb_html() -> String {

@@ -323,8 +323,8 @@ impl<'a> Sanitizer<'a> {
 /// # Example
 ///
 /// ```
-/// use justhtml::{parse, sanitize::sanitize_dom};
-/// use justhtml::sanitize::DEFAULT_POLICY;
+/// use whatwg_html_rs::{parse, sanitize::sanitize_dom};
+/// use whatwg_html_rs::sanitize::DEFAULT_POLICY;
 ///
 /// let mut result = parse("<script>alert(1)</script><p>Safe</p>");
 /// sanitize_dom(&mut result.dom, result.document, &DEFAULT_POLICY);

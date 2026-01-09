@@ -225,7 +225,7 @@ impl<'a> HtmlSerializer<'a> {
 /// # Example
 ///
 /// ```
-/// use justhtml::{parse, serialize::serialize_to_html};
+/// use whatwg_html_rs::{parse, serialize::serialize_to_html};
 ///
 /// let result = parse("<p>Hello</p>");
 /// let html = serialize_to_html(&result.dom, result.document);

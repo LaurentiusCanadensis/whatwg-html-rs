@@ -2,8 +2,8 @@
 //!
 //! These tests verify that the sanitizer properly handles XSS attack vectors.
 
-use justhtml::{parse, sanitize::{sanitize_dom, SanitizationPolicy, UnsafeHandling, UrlPolicy, UrlRule, DEFAULT_POLICY}};
-use justhtml::serialize::serialize_to_html;
+use whatwg_html_rs::{parse, sanitize::{sanitize_dom, SanitizationPolicy, UnsafeHandling, UrlPolicy, UrlRule, DEFAULT_POLICY}};
+use whatwg_html_rs::serialize::serialize_to_html;
 use std::collections::{HashMap, HashSet};
 
 fn sanitize(html: &str) -> String {

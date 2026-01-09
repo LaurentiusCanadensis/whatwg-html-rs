@@ -1689,25 +1689,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "justhtml"
-version = "0.1.0"
-dependencies = [
- "compact_str",
- "criterion",
- "encoding_rs",
- "iced",
- "once_cell",
- "proptest",
- "regex",
- "serde",
- "serde_json",
- "smallvec",
- "thiserror 2.0.17",
- "url",
- "urlencoding",
-]
-
-[[package]]
 name = "khronos-egl"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3904,6 +3885,25 @@ dependencies = [
  "log",
  "thiserror 2.0.17",
  "web-sys",
+]
+
+[[package]]
+name = "whatwg-html-rs"
+version = "0.1.0"
+dependencies = [
+ "compact_str",
+ "criterion",
+ "encoding_rs",
+ "iced",
+ "once_cell",
+ "proptest",
+ "regex",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "thiserror 2.0.17",
+ "url",
+ "urlencoding",
 ]
 
 [[package]]

@@ -1,6 +1,6 @@
 //! Integration tests for the JustHTML parser.
 
-use justhtml::{parse, parse_with_errors};
+use whatwg_html_rs::{parse, parse_with_errors};
 
 #[test]
 fn test_parse_empty_string() {

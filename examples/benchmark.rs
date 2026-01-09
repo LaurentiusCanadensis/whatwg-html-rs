@@ -1,6 +1,6 @@
 //! Performance benchmark for JustHTML Rust version.
 
-use justhtml::{parse, selector::query_all};
+use whatwg_html_rs::{parse, selector::query_all};
 use std::time::Instant;
 
 const SMALL_HTML: &str = "<p>Hello, <b>World</b>!</p>";
