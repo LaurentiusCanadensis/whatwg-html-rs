@@ -69,7 +69,7 @@ Benchmarks comparing Rust vs Python implementations:
 | Serialize 10MB | 2686 ms | 23 ms | **115x** |
 | Query `div` | 137 ms | 24 ms | **6x** |
 
-See [BENCHMARK.md](../BENCHMARK.md) for detailed benchmarks.
+See [BENCHMARK.md](BENCHMARK.md) for detailed benchmarks.
 
 ## Optional GUI
 
