@@ -1,4 +1,4 @@
-# JustHTML Performance Benchmarks
+# Performance Benchmarks
 
 Comprehensive benchmarks comparing implementations and parser strategies.
 
@@ -10,7 +10,7 @@ Comprehensive benchmarks comparing implementations and parser strategies.
 
 # Python vs Rust
 
-Benchmark comparing the Python and Rust implementations of JustHTML.
+Benchmark comparing the Rust state machine implementation and the Python JustHTML implementation.
 
 ## Test Environment
 
@@ -149,23 +149,35 @@ python3 benchmark_sizes.py
 The Python implementation has **559 tests** covering all functionality.
 
 ### Rust Tests
-The Rust implementation currently has **480 tests** (86% coverage of Python tests):
+The Rust implementation currently has **496 tests** (89% coverage of Python tests):
 
 | Test Suite | Tests | Notes |
 |------------|-------|-------|
 | Selector | 119 | 1 ignored |
+| Lib + Markdown | 113 | Core + markdown tests |
 | Sanitizer | 85 | XSS prevention tests |
 | Serialization | 81 | Round-trip tests |
 | Integration | 47 | Parser behavior tests |
 | Tokenizer | 45 | Token generation tests |
-| Library | 98 | Core functionality |
-| Doc-tests | 5 | API examples |
+| Doc-tests | 6 | API examples |
 
-**Rust Total: 480 tests** (2 ignored for features not yet implemented)
+**Rust Total: 496 tests** (2 ignored for features not yet implemented)
+
+### Features Implemented
+- ✅ HTML5 parsing and serialization
+- ✅ CSS selectors
+- ✅ HTML sanitization
+- ✅ Markdown conversion (`to_markdown()`)
+- ✅ Plain text extraction (`to_text()`)
+- ✅ Safe output methods (`to_html_safe()`, etc.)
+- ✅ CLI tool (`whatwg-html`)
+- ✅ GUI application (Iced)
 
 ### Features Not Yet in Rust
-- Markdown conversion (`to_markdown()`)
-- Some advanced sanitization options
+- URL proxy/rewriting (`UrlProxy`)
+- CSS inline style sanitization
+- Streaming/incremental parsing
+- Fragment context parsing (stub only)
 
 ---
 
@@ -219,7 +231,7 @@ Comparison of two tokenizer implementations in Rust.
 
 ### Recommendation
 
-Use the **state machine parser** (`release` branch) for production when performance matters. Use the **nom parser** (`nom` branch) for learning, prototyping, or when maintainability is prioritized over raw speed.
+Use the **state machine parser** (`release` branch) when performance matters. Use the **nom parser** (`nom` branch) for learning, prototyping, or when maintainability is prioritized over raw speed.
 
 ## Running the Comparison
 

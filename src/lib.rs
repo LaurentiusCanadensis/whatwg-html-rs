@@ -57,18 +57,59 @@ impl ParseResult {
     }
 
     /// Serialize the DOM back to HTML.
+    ///
+    /// Use `to_html_safe()` to sanitize before serialization.
     pub fn to_html(&self) -> String {
         serialize::serialize_to_html(&self.dom, self.document)
     }
 
+    /// Serialize the DOM back to HTML after sanitization.
+    ///
+    /// This is equivalent to calling `sanitize(None).to_html()` but more efficient.
+    pub fn to_html_safe(&self) -> String {
+        let sanitized = self.sanitize(None);
+        serialize::serialize_to_html(&sanitized.dom, sanitized.document)
+    }
+
     /// Serialize the DOM to Markdown.
+    ///
+    /// Use `to_markdown_safe()` to sanitize before serialization.
     pub fn to_markdown(&self) -> String {
         serialize::serialize_to_markdown(&self.dom, self.document)
     }
 
+    /// Serialize the DOM to Markdown after sanitization.
+    pub fn to_markdown_safe(&self) -> String {
+        let sanitized = self.sanitize(None);
+        serialize::serialize_to_markdown(&sanitized.dom, sanitized.document)
+    }
+
     /// Extract plain text from the DOM.
+    ///
+    /// Use `to_text_safe()` to sanitize before extraction.
     pub fn to_text(&self) -> String {
         self.extract_text(self.document)
+    }
+
+    /// Extract plain text from the DOM after sanitization.
+    pub fn to_text_safe(&self) -> String {
+        let sanitized = self.sanitize(None);
+        sanitized.extract_text(sanitized.document)
+    }
+
+    /// Sanitize the DOM using the default or provided policy.
+    ///
+    /// Returns a new ParseResult with sanitized content.
+    pub fn sanitize(&self, policy: Option<&sanitize::SanitizationPolicy>) -> ParseResult {
+        let mut dom = self.dom.clone();
+        let policy = policy.unwrap_or(&sanitize::DEFAULT_POLICY);
+        let errors = sanitize::sanitize_dom(&mut dom, self.document, policy)
+            .unwrap_or_default();
+        ParseResult {
+            dom,
+            document: self.document,
+            errors,
+        }
     }
 
     fn extract_text(&self, node_id: NodeId) -> String {
