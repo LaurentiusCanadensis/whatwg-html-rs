@@ -22,6 +22,9 @@ url = "2.5"
 encoding_rs = "0.8"
 urlencoding = "2.1"
 
+# CLI dependencies (optional)
+clap = { version = "4.5", features = ["derive"], optional = true }
+
 # GUI dependencies (optional)
 iced = { version = "0.14", optional = true }
 
@@ -33,7 +36,13 @@ proptest = "1.4"
 
 [features]
 default = []
+cli = ["clap"]
 gui = ["iced"]
+
+[[bin]]
+name = "whatwg-html"
+path = "src/bin/cli.rs"
+required-features = ["cli"]
 
 [[bin]]
 name = "whatwg-html-gui"
