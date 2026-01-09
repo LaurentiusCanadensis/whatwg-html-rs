@@ -219,7 +219,7 @@ Comparison of two tokenizer implementations in Rust.
 
 ### Recommendation
 
-Use the **state machine parser** (`release` branch) for production when performance matters. Use the **nom parser** (`nom` branch) for learning, prototyping, or when maintainability is prioritized over raw speed.
+Use the **state machine parser** (`release` branch) when performance matters. Use the **nom parser** (`nom` branch) for learning, prototyping, or when maintainability is prioritized over raw speed.
 
 ## Running the Comparison
 
