@@ -1,4 +1,4 @@
-# JustHTML Performance Benchmarks
+# Performance Benchmarks
 
 Comprehensive benchmarks comparing implementations and parser strategies.
 
@@ -10,7 +10,7 @@ Comprehensive benchmarks comparing implementations and parser strategies.
 
 # Python vs Rust
 
-Benchmark comparing the Python and Rust implementations of JustHTML.
+Benchmark comparing the Rust state machine implementation and the Python JustHTML implementation.
 
 ## Test Environment
 
