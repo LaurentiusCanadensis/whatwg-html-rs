@@ -60,6 +60,47 @@ impl ParseResult {
     pub fn to_html(&self) -> String {
         serialize::serialize_to_html(&self.dom, self.document)
     }
+
+    /// Serialize the DOM to Markdown.
+    pub fn to_markdown(&self) -> String {
+        serialize::serialize_to_markdown(&self.dom, self.document)
+    }
+
+    /// Extract plain text from the DOM.
+    pub fn to_text(&self) -> String {
+        self.extract_text(self.document)
+    }
+
+    fn extract_text(&self, node_id: NodeId) -> String {
+        let mut result = String::new();
+        self.collect_text(node_id, &mut result);
+        result
+    }
+
+    fn collect_text(&self, node_id: NodeId, result: &mut String) {
+        let node = self.dom.get(node_id);
+        match &node.kind {
+            NodeKind::Text(text) => result.push_str(text),
+            NodeKind::Element(el) => {
+                // Skip script and style content
+                if matches!(el.name.as_str(), "script" | "style") {
+                    return;
+                }
+                let mut child = node.first_child;
+                while let Some(child_id) = child {
+                    self.collect_text(child_id, result);
+                    child = self.dom.get(child_id).next_sibling;
+                }
+            }
+            _ => {
+                let mut child = node.first_child;
+                while let Some(child_id) = child {
+                    self.collect_text(child_id, result);
+                    child = self.dom.get(child_id).next_sibling;
+                }
+            }
+        }
+    }
 }
 
 /// Parse HTML and return a DOM tree.
