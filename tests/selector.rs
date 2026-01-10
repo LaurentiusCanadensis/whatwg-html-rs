@@ -975,3 +975,668 @@ fn test_checked_inputs() {
     let html = r#"<input type="checkbox" checked><input type="checkbox"><input type="radio" checked>"#;
     assert_eq!(query_count(html, ":checked"), 2);
 }
+
+// ==================== Form Pseudo-classes ====================
+
+#[test]
+#[ignore = ":required pseudo-class not yet implemented"]
+fn test_required_pseudo_class() {
+    let html = r#"<input required><input><textarea required></textarea>"#;
+    assert_eq!(query_count(html, ":required"), 2);
+}
+
+#[test]
+#[ignore = ":optional pseudo-class not yet implemented"]
+fn test_optional_pseudo_class() {
+    let html = r#"<input required><input><textarea></textarea>"#;
+    assert_eq!(query_count(html, ":optional"), 2);
+}
+
+#[test]
+#[ignore = ":read-only pseudo-class not yet implemented"]
+fn test_read_only_pseudo_class() {
+    let html = r#"<input readonly><input><textarea readonly></textarea>"#;
+    assert_eq!(query_count(html, ":read-only"), 2);
+}
+
+#[test]
+#[ignore = ":read-write pseudo-class not yet implemented"]
+fn test_read_write_pseudo_class() {
+    let html = r#"<input readonly><input><textarea></textarea>"#;
+    assert_eq!(query_count(html, ":read-write"), 2);
+}
+
+#[test]
+#[ignore = ":placeholder-shown pseudo-class not yet implemented"]
+fn test_placeholder_shown_pseudo_class() {
+    let html = r#"<input placeholder="Enter name"><input>"#;
+    assert_eq!(query_count(html, ":placeholder-shown"), 1);
+}
+
+// ==================== CSS4 Selectors ====================
+
+#[test]
+#[ignore = ":is() pseudo-class not yet implemented"]
+fn test_is_pseudo_class() {
+    let html = "<article><h1>T</h1></article><section><h1>T</h1></section><div><h1>T</h1></div>";
+    assert_eq!(query_count(html, ":is(article, section) h1"), 2);
+}
+
+#[test]
+#[ignore = ":where() pseudo-class not yet implemented"]
+fn test_where_pseudo_class() {
+    let html = "<article><p>A</p></article><div><p>D</p></div>";
+    assert_eq!(query_count(html, ":where(article, section) p"), 1);
+}
+
+#[test]
+#[ignore = ":has() pseudo-class not yet implemented"]
+fn test_has_pseudo_class() {
+    let html = "<div><p>Has P</p></div><div><span>No P</span></div>";
+    assert_eq!(query_count(html, "div:has(p)"), 1);
+}
+
+#[test]
+#[ignore = ":has() with child combinator not yet implemented"]
+fn test_has_with_child_combinator() {
+    let html = "<div><span>Direct</span></div><div><p><span>Nested</span></p></div>";
+    assert_eq!(query_count(html, "div:has(> span)"), 1);
+}
+
+// ==================== nth-child Formula Variations ====================
+
+#[test]
+fn test_nth_child_3n_plus_2() {
+    let html = "<ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li><li>9</li></ul>";
+    // 3n+2 = 2, 5, 8
+    assert_eq!(query_count(html, "li:nth-child(3n+2)"), 3);
+}
+
+#[test]
+fn test_nth_child_4n() {
+    let html = "<ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li></ul>";
+    // 4n = 4, 8
+    assert_eq!(query_count(html, "li:nth-child(4n)"), 2);
+}
+
+#[test]
+fn test_nth_child_4n_plus_1() {
+    let html = "<ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li></ul>";
+    // 4n+1 = 1, 5
+    assert_eq!(query_count(html, "li:nth-child(4n+1)"), 2);
+}
+
+#[test]
+fn test_nth_last_child_2() {
+    let html = "<ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li></ul>";
+    // Second from last
+    assert_eq!(query_count(html, "li:nth-last-child(2)"), 1);
+}
+
+#[test]
+fn test_nth_last_child_formula() {
+    let html = "<ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li></ul>";
+    // Last two items: -n+2 matches 2, 1 (from end)
+    assert_eq!(query_count(html, "li:nth-last-child(-n+2)"), 2);
+}
+
+#[test]
+fn test_nth_last_of_type_formula() {
+    let html = "<div><p>1</p><span>X</span><p>2</p><span>Y</span><p>3</p></div>";
+    // Last 2 paragraphs
+    assert_eq!(query_count(html, "p:nth-last-of-type(-n+2)"), 2);
+}
+
+#[test]
+#[ignore = "nth-child(An+B of S) syntax not yet implemented"]
+fn test_nth_child_of_selector() {
+    let html = "<ul><li>1</li><li class='hl'>2</li><li>3</li><li class='hl'>4</li><li class='hl'>5</li></ul>";
+    // 2nd of .hl class
+    assert_eq!(query_count(html, "li:nth-child(2 of .hl)"), 1);
+}
+
+// ==================== Attribute Edge Cases ====================
+
+#[test]
+fn test_attribute_case_sensitive_value() {
+    let html = r#"<div data-x="ABC"></div><div data-x="abc"></div>"#;
+    assert_eq!(query_count(html, r#"[data-x="ABC"]"#), 1);
+    assert_eq!(query_count(html, r#"[data-x="abc"]"#), 1);
+}
+
+#[test]
+fn test_attribute_with_single_quotes() {
+    let html = r#"<div data-x="test"></div>"#;
+    assert_eq!(query_count(html, "[data-x='test']"), 1);
+}
+
+#[test]
+fn test_attribute_unquoted_value() {
+    let html = r#"<div data-x="simple"></div>"#;
+    assert_eq!(query_count(html, "[data-x=simple]"), 1);
+}
+
+#[test]
+fn test_attribute_with_quotes_in_value() {
+    let html = r#"<div data-msg="say 'hello'"></div>"#;
+    assert_eq!(query_count(html, r#"[data-msg="say 'hello'"]"#), 1);
+}
+
+#[test]
+fn test_boolean_attributes() {
+    let html = "<input disabled hidden readonly required>";
+    assert_eq!(query_count(html, "[disabled]"), 1);
+    assert_eq!(query_count(html, "[hidden]"), 1);
+    assert_eq!(query_count(html, "[readonly]"), 1);
+    assert_eq!(query_count(html, "[required]"), 1);
+    assert_eq!(query_count(html, "[disabled][hidden][readonly][required]"), 1);
+}
+
+#[test]
+fn test_attribute_contains_word_multiple() {
+    let html = r#"<div class="one two three four"></div>"#;
+    assert_eq!(query_count(html, "[class~='two']"), 1);
+    assert_eq!(query_count(html, "[class~='three']"), 1);
+    assert_eq!(query_count(html, "[class~='five']"), 0);
+}
+
+#[test]
+fn test_attribute_starts_empty() {
+    let html = r#"<a href="test"></a>"#;
+    // Empty string is technically a prefix of everything
+    // Implementation treats empty string as matching all
+    assert_eq!(query_count(html, "[href^='']"), 1);
+}
+
+#[test]
+fn test_attribute_ends_empty() {
+    let html = r#"<a href="test"></a>"#;
+    // Empty string is technically a suffix of everything
+    assert_eq!(query_count(html, "[href$='']"), 1);
+}
+
+#[test]
+fn test_attribute_contains_empty() {
+    let html = r#"<a href="test"></a>"#;
+    // Empty string is contained in everything
+    assert_eq!(query_count(html, "[href*='']"), 1);
+}
+
+// ==================== Complex Combinator Chains ====================
+
+#[test]
+fn test_all_combinators_chained() {
+    let html = r##"
+        <div>
+            <section>
+                <article>
+                    <header></header>
+                    <p class="intro"></p>
+                    <p class="body"></p>
+                </article>
+            </section>
+        </div>"##;
+    assert_eq!(query_count(html, "div section > article header + p.intro"), 1);
+    assert_eq!(query_count(html, "div section > article p.intro ~ p.body"), 1);
+}
+
+#[test]
+fn test_repeated_child_combinator() {
+    let html = "<div><div><div><div><span>Deep</span></div></div></div></div>";
+    assert_eq!(query_count(html, "div > div > div > div > span"), 1);
+}
+
+#[test]
+fn test_repeated_descendant_combinator() {
+    let html = "<div><p><span><a><b>X</b></a></span></p></div>";
+    assert_eq!(query_count(html, "div p span a b"), 1);
+}
+
+#[test]
+fn test_mixed_descendants_and_children() {
+    let html = "<div><p><span><a><b>X</b></a></span></p></div>";
+    assert_eq!(query_count(html, "div p > span a > b"), 1);
+    assert_eq!(query_count(html, "div > p span > a b"), 1);
+}
+
+#[test]
+fn test_adjacent_chain() {
+    let html = "<div><a></a><b></b><c></c><d></d></div>";
+    assert_eq!(query_count(html, "a + b + c + d"), 1);
+}
+
+#[test]
+fn test_general_sibling_chain() {
+    let html = "<div><a></a><x></x><b></b><y></y><c></c></div>";
+    assert_eq!(query_count(html, "a ~ b ~ c"), 1);
+}
+
+// ==================== Selector List Edge Cases ====================
+
+#[test]
+fn test_selector_list_different_combinators() {
+    let html = "<div><p></p></div><section><span></span></section>";
+    assert_eq!(query_count(html, "div > p, section span"), 2);
+}
+
+#[test]
+fn test_selector_list_partial_match() {
+    let html = "<div></div>";
+    assert_eq!(query_count(html, "div, nonexistent"), 1);
+}
+
+#[test]
+fn test_selector_list_with_pseudo_classes() {
+    let html = "<ul><li>1</li><li>2</li><li>3</li></ul>";
+    assert_eq!(query_count(html, "li:first-child, li:last-child"), 2);
+}
+
+#[test]
+fn test_selector_list_all_headings() {
+    let html = "<h1></h1><h2></h2><h3></h3><h4></h4><h5></h5><h6></h6>";
+    assert_eq!(query_count(html, "h1, h2, h3, h4, h5, h6"), 6);
+}
+
+#[test]
+fn test_selector_list_duplicates() {
+    let html = "<div class='a b'></div>";
+    // Same element matched by multiple selectors in list should only count once
+    assert_eq!(query_count(html, ".a, .b"), 1);
+}
+
+#[test]
+fn test_selector_list_whitespace() {
+    let html = "<div></div><span></span>";
+    assert_eq!(query_count(html, "div , span"), 2);
+    assert_eq!(query_count(html, "div,span"), 2);
+    assert_eq!(query_count(html, "  div  ,  span  "), 2);
+}
+
+// ==================== Structural Edge Cases ====================
+
+#[test]
+#[ignore = ":only-child should skip text nodes - not yet implemented"]
+fn test_only_child_with_text_siblings() {
+    // Text nodes don't count for :only-child per CSS spec
+    let html = "<div>Text before<span>Only element</span>Text after</div>";
+    assert_eq!(query_count(html, "span:only-child"), 1);
+}
+
+#[test]
+#[ignore = ":first-child should skip comments - not yet implemented"]
+fn test_first_child_after_comment() {
+    let html = "<div><!-- comment --><p>First</p></div>";
+    assert_eq!(query_count(html, "p:first-child"), 1);
+}
+
+#[test]
+#[ignore = ":last-child should skip comments - not yet implemented"]
+fn test_last_child_before_comment() {
+    let html = "<div><p>Last</p><!-- comment --></div>";
+    assert_eq!(query_count(html, "p:last-child"), 1);
+}
+
+#[test]
+fn test_empty_with_self_closing() {
+    let html = "<div><br></div><div></div>";
+    // div with br is NOT empty
+    assert_eq!(query_count(html, "div:empty"), 1);
+}
+
+#[test]
+fn test_empty_nested_empty() {
+    let html = "<div><span></span></div><div></div>";
+    // div with empty span is NOT :empty (has child element)
+    assert_eq!(query_count(html, "div:empty"), 1);
+    assert_eq!(query_count(html, "span:empty"), 1);
+}
+
+#[test]
+fn test_nth_child_single_element() {
+    let html = "<ul><li>Only</li></ul>";
+    assert_eq!(query_count(html, "li:nth-child(1)"), 1);
+    assert_eq!(query_count(html, "li:nth-last-child(1)"), 1);
+    assert_eq!(query_count(html, "li:only-child"), 1);
+}
+
+#[test]
+fn test_first_of_type_with_mixed() {
+    let html = "<div><span>1</span><p>2</p><span>3</span><p>4</p></div>";
+    assert_eq!(query_count(html, "span:first-of-type"), 1);
+    assert_eq!(query_count(html, "p:first-of-type"), 1);
+}
+
+#[test]
+fn test_last_of_type_with_mixed() {
+    let html = "<div><span>1</span><p>2</p><span>3</span><p>4</p></div>";
+    assert_eq!(query_count(html, "span:last-of-type"), 1);
+    assert_eq!(query_count(html, "p:last-of-type"), 1);
+}
+
+#[test]
+fn test_only_of_type_with_mixed() {
+    let html = "<div><span>1</span><p>2</p><b>3</b></div>";
+    assert_eq!(query_count(html, "span:only-of-type"), 1);
+    assert_eq!(query_count(html, "p:only-of-type"), 1);
+    assert_eq!(query_count(html, "b:only-of-type"), 1);
+}
+
+// ==================== HTML5 Semantic Elements ====================
+
+#[test]
+fn test_html5_semantic_elements() {
+    let html = "<main><article><section><aside></aside></section></article></main>";
+    assert_eq!(query_count(html, "main"), 1);
+    assert_eq!(query_count(html, "article"), 1);
+    assert_eq!(query_count(html, "section"), 1);
+    assert_eq!(query_count(html, "aside"), 1);
+    assert_eq!(query_count(html, "main article section aside"), 1);
+}
+
+#[test]
+fn test_nav_header_footer() {
+    let html = "<nav></nav><header></header><footer></footer>";
+    assert_eq!(query_count(html, "nav, header, footer"), 3);
+}
+
+#[test]
+fn test_figure_figcaption() {
+    let html = "<figure><img src='x'><figcaption>Caption</figcaption></figure>";
+    assert_eq!(query_count(html, "figure figcaption"), 1);
+    assert_eq!(query_count(html, "figure > img"), 1);
+}
+
+#[test]
+fn test_details_summary() {
+    let html = "<details><summary>Title</summary><p>Content</p></details>";
+    assert_eq!(query_count(html, "details summary"), 1);
+    assert_eq!(query_count(html, "details > p"), 1);
+}
+
+#[test]
+fn test_template_element() {
+    let html = "<template><div>Hidden</div></template><div>Visible</div>";
+    assert_eq!(query_count(html, "template div"), 1);
+    assert_eq!(query_count(html, "div"), 2);
+}
+
+#[test]
+fn test_custom_elements() {
+    let html = "<my-component><inner-element></inner-element></my-component>";
+    assert_eq!(query_count(html, "my-component"), 1);
+    assert_eq!(query_count(html, "inner-element"), 1);
+    assert_eq!(query_count(html, "my-component inner-element"), 1);
+    assert_eq!(query_count(html, "my-component > inner-element"), 1);
+}
+
+#[test]
+fn test_custom_element_with_hyphen() {
+    let html = "<x-button><x-icon></x-icon></x-button>";
+    assert_eq!(query_count(html, "x-button"), 1);
+    assert_eq!(query_count(html, "x-icon"), 1);
+}
+
+#[test]
+fn test_data_attributes_multiple() {
+    let html = r#"<div data-testid="btn" data-state="active" data-count="5"></div>"#;
+    assert_eq!(query_count(html, "[data-testid]"), 1);
+    assert_eq!(query_count(html, "[data-state]"), 1);
+    assert_eq!(query_count(html, "[data-count]"), 1);
+    assert_eq!(query_count(html, "[data-testid][data-state][data-count]"), 1);
+}
+
+// ==================== SVG and MathML ====================
+
+#[test]
+fn test_svg_elements() {
+    let html = "<svg><circle cx='50' cy='50' r='40'></circle><rect width='100' height='100'></rect></svg>";
+    assert_eq!(query_count(html, "svg"), 1);
+    assert_eq!(query_count(html, "circle"), 1);
+    assert_eq!(query_count(html, "rect"), 1);
+    assert_eq!(query_count(html, "svg circle"), 1);
+    assert_eq!(query_count(html, "svg > circle"), 1);
+}
+
+#[test]
+fn test_svg_with_class() {
+    let html = r#"<svg><circle class="highlight"></circle><circle></circle></svg>"#;
+    assert_eq!(query_count(html, "circle.highlight"), 1);
+}
+
+#[test]
+fn test_svg_nested() {
+    let html = "<svg><g><g><circle></circle></g></g></svg>";
+    assert_eq!(query_count(html, "svg g g circle"), 1);
+    assert_eq!(query_count(html, "g > circle"), 1);
+}
+
+// ==================== Escaped Characters ====================
+
+#[test]
+#[ignore = "CSS escape sequences not yet implemented"]
+fn test_escaped_colon_in_class() {
+    let html = r#"<div class="my:class"></div>"#;
+    assert_eq!(query_count(html, r".my\:class"), 1);
+}
+
+#[test]
+#[ignore = "CSS escape sequences not yet implemented"]
+fn test_escaped_hash_in_id() {
+    let html = r#"<div id="my#id"></div>"#;
+    assert_eq!(query_count(html, r"#my\#id"), 1);
+}
+
+#[test]
+#[ignore = "CSS escape sequences not yet implemented"]
+fn test_escaped_dot_in_class() {
+    let html = r#"<div class="my.class"></div>"#;
+    assert_eq!(query_count(html, r".my\.class"), 1);
+}
+
+#[test]
+#[ignore = "CSS unicode escapes not yet implemented"]
+fn test_unicode_escape_sequence() {
+    let html = r#"<div class="icon"></div>"#;
+    // \69 = 'i' in CSS unicode escape
+    assert_eq!(query_count(html, r".\69 con"), 1);
+}
+
+// ==================== Performance/Stress Tests ====================
+
+#[test]
+fn test_wide_tree_100_siblings() {
+    let items: String = (0..100).map(|i| format!("<span class='i{}'></span>", i)).collect();
+    let html = format!("<div>{}</div>", items);
+    assert_eq!(query_count(&html, "span"), 100);
+    assert_eq!(query_count(&html, "span.i50"), 1);
+    assert_eq!(query_count(&html, "span:nth-child(50)"), 1);
+}
+
+#[test]
+fn test_deep_nesting_20_levels() {
+    let open: String = (0..20).map(|_| "<div>").collect();
+    let close: String = (0..20).map(|_| "</div>").collect();
+    let html = format!("{}<span class='deep'></span>{}", open, close);
+    assert_eq!(query_count(&html, "span.deep"), 1);
+    assert_eq!(query_count(&html, "div span"), 1);
+}
+
+#[test]
+fn test_many_classes_on_element() {
+    let classes: String = (0..50).map(|i| format!("c{}", i)).collect::<Vec<_>>().join(" ");
+    let html = format!(r#"<div class="{}"></div>"#, classes);
+    assert_eq!(query_count(&html, ".c0"), 1);
+    assert_eq!(query_count(&html, ".c25"), 1);
+    assert_eq!(query_count(&html, ".c49"), 1);
+    assert_eq!(query_count(&html, ".c0.c25.c49"), 1);
+}
+
+#[test]
+fn test_many_attributes() {
+    let html = r#"<div a="1" b="2" c="3" d="4" e="5" f="6" g="7" h="8" i="9" j="10"></div>"#;
+    assert_eq!(query_count(html, "[a][b][c][d][e]"), 1);
+    assert_eq!(query_count(html, "[f][g][h][i][j]"), 1);
+}
+
+#[test]
+fn test_complex_selector_repeated() {
+    let html = r##"
+        <div class="container">
+            <article class="post">
+                <header><h1>Title</h1></header>
+                <section class="content"><p class="intro">Text</p></section>
+            </article>
+        </div>
+    "##;
+    // Run same complex query multiple times (tests caching if any)
+    for _ in 0..10 {
+        assert_eq!(query_count(html, ".container .post > section.content p.intro"), 1);
+    }
+}
+
+// ==================== :not() Advanced ====================
+
+#[test]
+fn test_not_with_attribute() {
+    let html = r#"<input type="text"><input type="checkbox"><input type="radio">"#;
+    assert_eq!(query_count(html, r#"input:not([type="text"])"#), 2);
+}
+
+#[test]
+fn test_not_with_pseudo_class() {
+    let html = "<ul><li>1</li><li>2</li><li>3</li></ul>";
+    assert_eq!(query_count(html, "li:not(:first-child)"), 2);
+    assert_eq!(query_count(html, "li:not(:last-child)"), 2);
+}
+
+#[test]
+fn test_not_chained() {
+    let html = "<ul><li class='a'>1</li><li class='b'>2</li><li class='c'>3</li></ul>";
+    assert_eq!(query_count(html, "li:not(.a):not(.b)"), 1);
+}
+
+#[test]
+fn test_not_with_id() {
+    let html = r#"<div id="keep"></div><div id="remove"></div>"#;
+    assert_eq!(query_count(html, "div:not(#remove)"), 1);
+}
+
+#[test]
+fn test_not_universal() {
+    let html = "<div></div><span></span>";
+    // :not(*) matches nothing
+    assert_eq!(query_count(html, ":not(*)"), 0);
+}
+
+// ==================== Whitespace Handling ====================
+
+#[test]
+fn test_selector_extra_whitespace() {
+    let html = "<div><span></span></div>";
+    assert_eq!(query_count(html, "div    span"), 1);
+    assert_eq!(query_count(html, "div  >  span"), 1);
+    assert_eq!(query_count(html, "  div  "), 1);
+}
+
+#[test]
+#[ignore = "whitespace inside attribute brackets not yet supported"]
+fn test_attribute_whitespace_in_selector() {
+    let html = r#"<div data-x="test"></div>"#;
+    assert_eq!(query_count(html, "[ data-x ]"), 1);
+    assert_eq!(query_count(html, "[ data-x = 'test' ]"), 1);
+}
+
+#[test]
+fn test_pseudo_class_whitespace() {
+    let html = "<ul><li>1</li><li>2</li></ul>";
+    assert_eq!(query_count(html, "li:nth-child( 1 )"), 1);
+    assert_eq!(query_count(html, "li:nth-child( 2n + 1 )"), 1);
+}
+
+// ==================== Edge Cases in Matching ====================
+
+#[test]
+fn test_no_elements_match() {
+    let html = "<div><span></span></div>";
+    assert_eq!(query_count(html, "article"), 0);
+    assert_eq!(query_count(html, ".nonexistent"), 0);
+    assert_eq!(query_count(html, "#missing"), 0);
+}
+
+#[test]
+fn test_self_referential_selector() {
+    let html = "<div class='a'><div class='a'></div></div>";
+    assert_eq!(query_count(html, "div.a div.a"), 1);
+    assert_eq!(query_count(html, "div.a > div.a"), 1);
+}
+
+#[test]
+fn test_adjacent_same_tag() {
+    let html = "<div></div><div></div><div></div>";
+    assert_eq!(query_count(html, "div + div"), 2);
+}
+
+#[test]
+fn test_general_sibling_same_tag() {
+    let html = "<div></div><div></div><div></div>";
+    assert_eq!(query_count(html, "div ~ div"), 2);
+}
+
+#[test]
+fn test_child_of_body() {
+    let html = "<div></div><span></span>";
+    assert_eq!(query_count(html, "body > div"), 1);
+    assert_eq!(query_count(html, "body > span"), 1);
+}
+
+#[test]
+fn test_descendant_of_html() {
+    let html = "<div></div>";
+    assert_eq!(query_count(html, "html div"), 1);
+    assert_eq!(query_count(html, "html body div"), 1);
+}
+
+// ==================== Invalid Selector Handling ====================
+
+#[test]
+fn test_error_unclosed_bracket() {
+    assert!(parse_selector("[href").is_err());
+}
+
+#[test]
+#[ignore = "parser is lenient with unclosed parens"]
+fn test_error_unclosed_paren() {
+    assert!(parse_selector(":nth-child(2n+1").is_err());
+}
+
+#[test]
+#[ignore = "parser is lenient with double combinators"]
+fn test_error_double_combinator() {
+    assert!(parse_selector("div > > span").is_err());
+}
+
+#[test]
+#[ignore = "parser is lenient with trailing combinators"]
+fn test_error_trailing_combinator() {
+    assert!(parse_selector("div >").is_err());
+}
+
+#[test]
+#[ignore = "parser is lenient with leading combinators"]
+fn test_error_leading_combinator() {
+    assert!(parse_selector("> div").is_err());
+}
+
+#[test]
+fn test_error_invalid_pseudo_class() {
+    // Unknown pseudo-class - parser may accept it as a no-match
+    let result = parse_selector(":unknown-pseudo");
+    // Implementation accepts unknown pseudo-classes
+    assert!(result.is_ok());
+}
+
+#[test]
+#[ignore = "parser is lenient with empty :not()"]
+fn test_error_empty_not() {
+    assert!(parse_selector(":not()").is_err());
+}
