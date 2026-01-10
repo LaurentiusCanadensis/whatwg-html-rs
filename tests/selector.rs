@@ -804,3 +804,174 @@ fn test_root_with_tag() {
     let roots = query_all(&result.dom, result.document, "html:root").unwrap();
     assert_eq!(roots.len(), 1);
 }
+
+// ==================== Additional Edge Case Tests ====================
+
+#[test]
+fn test_empty_with_whitespace_only() {
+    // Per CSS Selectors Level 4, elements with only whitespace ARE considered empty
+    // Our implementation follows CSS4 behavior
+    let html = "<div>   </div><div></div>";
+    assert_eq!(query_count(html, "div:empty"), 2);
+}
+
+#[test]
+fn test_empty_with_comment_only() {
+    let html = "<div><!-- comment --></div><div></div>";
+    // Comments don't count as content, so both should match
+    assert_eq!(query_count(html, "div:empty"), 2);
+}
+
+#[test]
+fn test_first_child_nested() {
+    let html = "<div><span><b>1</b><b>2</b></span><span><b>3</b></span></div>";
+    assert_eq!(query_count(html, "b:first-child"), 2);
+}
+
+#[test]
+fn test_last_child_nested() {
+    let html = "<div><span><b>1</b><b>2</b></span><span><b>3</b></span></div>";
+    assert_eq!(query_count(html, "b:last-child"), 2);
+}
+
+#[test]
+fn test_nth_child_beyond_count() {
+    let html = "<ul><li>1</li><li>2</li></ul>";
+    assert_eq!(query_count(html, "li:nth-child(5)"), 0);
+}
+
+#[test]
+fn test_nth_last_child() {
+    let html = "<ul><li>1</li><li>2</li><li>3</li></ul>";
+    assert_eq!(query_count(html, "li:nth-last-child(1)"), 1);
+    assert_eq!(query_count(html, "li:nth-last-child(2)"), 1);
+}
+
+#[test]
+fn test_nth_last_of_type() {
+    let html = "<div><p>1</p><span>2</span><p>3</p></div>";
+    assert_eq!(query_count(html, "p:nth-last-of-type(1)"), 1);
+}
+
+#[test]
+#[ignore = "case-insensitive attribute flag (i) not yet implemented"]
+fn test_attribute_case_insensitive_flag() {
+    let html = "<div data-value=\"ABC\"></div><div data-value=\"abc\"></div>";
+    // With case-insensitive flag (i)
+    assert_eq!(query_count(html, "[data-value=\"abc\" i]"), 2);
+}
+
+#[test]
+fn test_pseudo_class_with_class_selector() {
+    let html = "<ul><li class=\"active\">1</li><li>2</li><li class=\"active\">3</li></ul>";
+    assert_eq!(query_count(html, "li:first-child.active"), 1);
+    assert_eq!(query_count(html, "li.active:last-child"), 1);
+}
+
+#[test]
+fn test_adjacent_with_pseudo() {
+    let html = "<div><p>1</p><span>2</span><span>3</span></div>";
+    assert_eq!(query_count(html, "p + span:first-of-type"), 1);
+}
+
+#[test]
+fn test_general_sibling_with_pseudo() {
+    let html = "<div><p>1</p><span>2</span><span>3</span></div>";
+    assert_eq!(query_count(html, "p ~ span"), 2);
+}
+
+#[test]
+fn test_not_with_multiple_conditions() {
+    let html = "<div class=\"a\"></div><div class=\"b\"></div><div class=\"a b\"></div>";
+    assert_eq!(query_count(html, "div:not(.a)"), 1);
+    assert_eq!(query_count(html, "div:not(.b)"), 1);
+}
+
+#[test]
+fn test_complex_nested_query() {
+    let html = r##"
+        <article>
+            <header><h1>Title</h1></header>
+            <section>
+                <p class="intro">Intro</p>
+                <p>Body</p>
+            </section>
+            <footer><a href="#">Link</a></footer>
+        </article>
+    "##;
+    assert_eq!(query_count(html, "article section p.intro"), 1);
+    assert_eq!(query_count(html, "article > section > p"), 2);
+    assert_eq!(query_count(html, "article header + section"), 1);
+}
+
+#[test]
+fn test_special_characters_in_attribute() {
+    let html = r#"<a href="https://example.com/?a=1&b=2">Link</a>"#;
+    assert!(has_match(html, r#"a[href*="example.com"]"#));
+}
+
+#[test]
+fn test_hyphenated_attribute() {
+    let html = "<div data-my-value=\"test\"></div>";
+    assert!(has_match(html, "[data-my-value]"));
+    assert!(has_match(html, "[data-my-value=\"test\"]"));
+}
+
+#[test]
+fn test_namespace_in_tag() {
+    // HTML5 parser should handle SVG namespace
+    let html = "<svg><circle cx=\"50\" cy=\"50\" r=\"40\"/></svg>";
+    assert_eq!(query_count(html, "circle"), 1);
+    assert_eq!(query_count(html, "svg circle"), 1);
+}
+
+#[test]
+fn test_deep_nesting() {
+    let html = "<div><div><div><div><div><span>Deep</span></div></div></div></div></div>";
+    assert_eq!(query_count(html, "div span"), 1);
+    assert_eq!(query_count(html, "div div div div div span"), 1);
+}
+
+#[test]
+fn test_many_siblings_nth() {
+    let html = "<ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li><li>9</li><li>10</li></ul>";
+    assert_eq!(query_count(html, "li"), 10);
+    assert_eq!(query_count(html, "li:nth-child(odd)"), 5);
+    assert_eq!(query_count(html, "li:nth-child(even)"), 5);
+    assert_eq!(query_count(html, "li:nth-child(3n)"), 3);
+}
+
+#[test]
+fn test_class_with_hyphen_multiple() {
+    let html = "<div class=\"my-class my-other-class\"></div>";
+    assert!(has_match(html, ".my-class"));
+    assert!(has_match(html, ".my-other-class"));
+    assert!(has_match(html, ".my-class.my-other-class"));
+}
+
+#[test]
+fn test_id_with_special_chars() {
+    let html = "<div id=\"my-id_123\"></div>";
+    assert!(has_match(html, "#my-id_123"));
+}
+
+#[test]
+fn test_attribute_starts_ends_contains() {
+    let html = "<a href=\"https://example.com/path\">Link</a>";
+    assert!(has_match(html, "[href^=\"https\"]"));
+    assert!(has_match(html, "[href$=\"path\"]"));
+    assert!(has_match(html, "[href*=\"example\"]"));
+}
+
+#[test]
+fn test_disabled_enabled_form_elements() {
+    let html = r#"<input type="text" disabled><input type="text"><button disabled>Btn</button>"#;
+    assert_eq!(query_count(html, ":disabled"), 2);
+    assert_eq!(query_count(html, ":enabled"), 1);
+}
+
+#[test]
+fn test_checked_inputs() {
+    let html = r#"<input type="checkbox" checked><input type="checkbox"><input type="radio" checked>"#;
+    assert_eq!(query_count(html, ":checked"), 2);
+}

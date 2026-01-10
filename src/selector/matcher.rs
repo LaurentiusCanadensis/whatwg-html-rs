@@ -454,7 +454,8 @@ fn matches_selector_impl(dom: &Dom, node_id: NodeId, selector: &Selector) -> boo
                     }
                 }
                 Some(Combinator::Adjacent) => {
-                    if let Some(prev) = dom.get(current_id).prev_sibling {
+                    // Find immediately previous element sibling (skip text/comment nodes)
+                    if let Some(prev) = find_prev_element_sibling(dom, current_id) {
                         if matches_compound(dom, prev, &selector.parts[part_idx - 1].selectors) {
                             Some(prev)
                         } else {
@@ -487,11 +488,26 @@ fn find_matching_ancestor(dom: &Dom, node_id: NodeId, part: &SelectorPart) -> Op
     None
 }
 
-/// Find a previous sibling that matches the selector part.
+/// Find a previous sibling that matches the selector part (skips non-element nodes).
 fn find_matching_prev_sibling(dom: &Dom, node_id: NodeId, part: &SelectorPart) -> Option<NodeId> {
     let mut current = dom.get(node_id).prev_sibling;
     while let Some(id) = current {
-        if matches_compound(dom, id, &part.selectors) {
+        // Only consider element nodes
+        if matches!(dom.get(id).kind, NodeKind::Element(_)) {
+            if matches_compound(dom, id, &part.selectors) {
+                return Some(id);
+            }
+        }
+        current = dom.get(id).prev_sibling;
+    }
+    None
+}
+
+/// Find the immediately previous element sibling (skipping text/comment nodes).
+fn find_prev_element_sibling(dom: &Dom, node_id: NodeId) -> Option<NodeId> {
+    let mut current = dom.get(node_id).prev_sibling;
+    while let Some(id) = current {
+        if matches!(dom.get(id).kind, NodeKind::Element(_)) {
             return Some(id);
         }
         current = dom.get(id).prev_sibling;
