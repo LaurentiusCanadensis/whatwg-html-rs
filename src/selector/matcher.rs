@@ -35,38 +35,80 @@ fn matches_simple(dom: &Dom, node_id: NodeId, selector: &SimpleSelector) -> bool
                 .map(|v| v.split_whitespace().any(|c| c == class))
                 .unwrap_or(false)
         }
-        SimpleSelector::Attribute { name, op, value } => {
+        SimpleSelector::Attribute { name, op, value, case_insensitive } => {
             // get returns Option<Option<&str>> - outer Option is presence, inner is value
             let attr_present = element.attrs.get(name);
             let attr_value = attr_present.flatten();
+
+            // Helper for case-insensitive comparison
+            let compare = |a: &str, b: &str| -> bool {
+                if *case_insensitive {
+                    a.eq_ignore_ascii_case(b)
+                } else {
+                    a == b
+                }
+            };
+
+            let contains_ci = |haystack: &str, needle: &str| -> bool {
+                if *case_insensitive {
+                    haystack.to_ascii_lowercase().contains(&needle.to_ascii_lowercase())
+                } else {
+                    haystack.contains(needle)
+                }
+            };
+
+            let starts_with_ci = |haystack: &str, needle: &str| -> bool {
+                if *case_insensitive {
+                    haystack.len() >= needle.len()
+                        && haystack[..needle.len()].eq_ignore_ascii_case(needle)
+                } else {
+                    haystack.starts_with(needle)
+                }
+            };
+
+            let ends_with_ci = |haystack: &str, needle: &str| -> bool {
+                if *case_insensitive {
+                    haystack.len() >= needle.len()
+                        && haystack[haystack.len() - needle.len()..].eq_ignore_ascii_case(needle)
+                } else {
+                    haystack.ends_with(needle)
+                }
+            };
+
             match op {
                 AttributeOp::Exists => attr_present.is_some(),
                 AttributeOp::Exact => {
-                    attr_value.map(|v| v == value.as_deref().unwrap_or("")).unwrap_or(false)
+                    let target = value.as_deref().unwrap_or("");
+                    attr_value.map(|v| compare(v, target)).unwrap_or(false)
                 }
                 AttributeOp::Contains => {
                     let target = value.as_deref().unwrap_or("");
                     attr_value
-                        .map(|v| v.split_whitespace().any(|w| w == target))
+                        .map(|v| v.split_whitespace().any(|w| compare(w, target)))
                         .unwrap_or(false)
                 }
                 AttributeOp::DashPrefix => {
                     let target = value.as_deref().unwrap_or("");
                     attr_value
-                        .map(|v| v == target || v.starts_with(&format!("{}-", target)))
+                        .map(|v| {
+                            compare(v, target) || {
+                                let prefix = format!("{}-", target);
+                                starts_with_ci(v, &prefix)
+                            }
+                        })
                         .unwrap_or(false)
                 }
                 AttributeOp::StartsWith => {
                     let target = value.as_deref().unwrap_or("");
-                    attr_value.map(|v| v.starts_with(target)).unwrap_or(false)
+                    attr_value.map(|v| starts_with_ci(v, target)).unwrap_or(false)
                 }
                 AttributeOp::EndsWith => {
                     let target = value.as_deref().unwrap_or("");
-                    attr_value.map(|v| v.ends_with(target)).unwrap_or(false)
+                    attr_value.map(|v| ends_with_ci(v, target)).unwrap_or(false)
                 }
                 AttributeOp::Substring => {
                     let target = value.as_deref().unwrap_or("");
-                    attr_value.map(|v| v.contains(target)).unwrap_or(false)
+                    attr_value.map(|v| contains_ci(v, target)).unwrap_or(false)
                 }
             }
         }
@@ -74,6 +116,14 @@ fn matches_simple(dom: &Dom, node_id: NodeId, selector: &SimpleSelector) -> bool
             matches_pseudo_class(dom, node_id, name, argument.as_deref())
         }
         SimpleSelector::Not(inner) => !matches_selector_impl(dom, node_id, inner),
+        SimpleSelector::Is(selectors) => {
+            // :is() matches if any of the selectors match
+            selectors.iter().any(|s| matches_selector_impl(dom, node_id, s))
+        }
+        SimpleSelector::Where(selectors) => {
+            // :where() matches if any of the selectors match (same as :is, just zero specificity)
+            selectors.iter().any(|s| matches_selector_impl(dom, node_id, s))
+        }
     }
 }
 
@@ -83,23 +133,26 @@ fn matches_pseudo_class(dom: &Dom, node_id: NodeId, name: &str, argument: Option
 
     match name {
         "first-child" => {
+            // Check if this is the first element child (skipping text/comment nodes)
             if let Some(parent) = node.parent {
-                dom.get(parent).first_child == Some(node_id)
+                get_first_element_child(dom, parent) == Some(node_id)
             } else {
                 false
             }
         }
         "last-child" => {
+            // Check if this is the last element child (skipping text/comment nodes)
             if let Some(parent) = node.parent {
-                dom.get(parent).last_child == Some(node_id)
+                get_last_element_child(dom, parent) == Some(node_id)
             } else {
                 false
             }
         }
         "only-child" => {
+            // Check if this is the only element child (skipping text/comment nodes)
             if let Some(parent) = node.parent {
-                let parent_node = dom.get(parent);
-                parent_node.first_child == Some(node_id) && parent_node.last_child == Some(node_id)
+                get_first_element_child(dom, parent) == Some(node_id)
+                    && get_last_element_child(dom, parent) == Some(node_id)
             } else {
                 false
             }
@@ -176,6 +229,63 @@ fn matches_pseudo_class(dom: &Dom, node_id: NodeId, name: &str, argument: Option
                 false
             }
         }
+        "required" => {
+            // Form elements with required attribute
+            if let NodeKind::Element(el) = &node.kind {
+                let is_form_element = matches!(
+                    el.name.as_str(),
+                    "input" | "select" | "textarea"
+                );
+                is_form_element && el.attrs.contains("required")
+            } else {
+                false
+            }
+        }
+        "optional" => {
+            // Form elements without required attribute
+            if let NodeKind::Element(el) = &node.kind {
+                let is_form_element = matches!(
+                    el.name.as_str(),
+                    "input" | "select" | "textarea"
+                );
+                is_form_element && !el.attrs.contains("required")
+            } else {
+                false
+            }
+        }
+        "read-only" => {
+            // Elements with readonly attribute or non-editable
+            if let NodeKind::Element(el) = &node.kind {
+                match el.name.as_str() {
+                    "input" | "textarea" => el.attrs.contains("readonly"),
+                    _ => false,
+                }
+            } else {
+                false
+            }
+        }
+        "read-write" => {
+            // Editable elements without readonly
+            if let NodeKind::Element(el) = &node.kind {
+                match el.name.as_str() {
+                    "input" | "textarea" => !el.attrs.contains("readonly"),
+                    _ => false,
+                }
+            } else {
+                false
+            }
+        }
+        "placeholder-shown" => {
+            // Input/textarea with placeholder attribute (and presumably empty value)
+            if let NodeKind::Element(el) = &node.kind {
+                match el.name.as_str() {
+                    "input" | "textarea" => el.attrs.contains("placeholder"),
+                    _ => false,
+                }
+            } else {
+                false
+            }
+        }
         "first-of-type" => {
             if let NodeKind::Element(el) = &node.kind {
                 is_first_of_type(dom, node_id, &el.name)
@@ -231,6 +341,43 @@ fn matches_pseudo_class(dom: &Dom, node_id: NodeId, name: &str, argument: Option
         }
         _ => false, // Unknown pseudo-class
     }
+}
+
+/// Get the first element child of a parent node (skipping text/comment nodes).
+fn get_first_element_child(dom: &Dom, parent_id: NodeId) -> Option<NodeId> {
+    let mut child = dom.get(parent_id).first_child;
+    while let Some(child_id) = child {
+        if matches!(dom.get(child_id).kind, NodeKind::Element(_)) {
+            return Some(child_id);
+        }
+        child = dom.get(child_id).next_sibling;
+    }
+    None
+}
+
+/// Get the last element child of a parent node (skipping text/comment nodes).
+fn get_last_element_child(dom: &Dom, parent_id: NodeId) -> Option<NodeId> {
+    let mut child = dom.get(parent_id).last_child;
+    while let Some(child_id) = child {
+        if matches!(dom.get(child_id).kind, NodeKind::Element(_)) {
+            return Some(child_id);
+        }
+        child = dom.get(child_id).prev_sibling;
+    }
+    None
+}
+
+/// Count the number of element children (excluding text/comment nodes).
+fn count_element_children(dom: &Dom, parent_id: NodeId) -> usize {
+    let mut count = 0;
+    let mut child = dom.get(parent_id).first_child;
+    while let Some(child_id) = child {
+        if matches!(dom.get(child_id).kind, NodeKind::Element(_)) {
+            count += 1;
+        }
+        child = dom.get(child_id).next_sibling;
+    }
+    count
 }
 
 /// Get 1-indexed position of an element among its siblings.

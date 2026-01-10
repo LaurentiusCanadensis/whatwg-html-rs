@@ -53,6 +53,8 @@ pub enum SimpleSelector {
         name: String,
         op: AttributeOp,
         value: Option<String>,
+        /// Case-insensitive flag (i) for value comparison
+        case_insensitive: bool,
     },
     /// Pseudo-class selector (:first-child, :nth-child, etc.)
     PseudoClass {
@@ -61,6 +63,10 @@ pub enum SimpleSelector {
     },
     /// Negation pseudo-class (:not(...))
     Not(Box<Selector>),
+    /// :is() pseudo-class (matches any of the selectors)
+    Is(Vec<Selector>),
+    /// :where() pseudo-class (like :is but zero specificity)
+    Where(Vec<Selector>),
 }
 
 /// A part of a selector (compound selector with optional combinator).
@@ -140,6 +146,83 @@ impl SelectorParser {
         }
 
         Ok(SelectorList { selectors })
+    }
+
+    /// Parse a selector list until closing parenthesis (for :is() and :where()).
+    fn parse_selector_list_until_close(&mut self) -> Result<Vec<Selector>, SelectorError> {
+        let mut selectors = Vec::new();
+
+        loop {
+            // Skip whitespace
+            while self.peek().token_type == TokenType::Combinator
+                && self.peek().value.as_deref() == Some(" ")
+            {
+                self.advance();
+            }
+
+            // Check for end of list
+            if self.at_end() || self.peek().token_type == TokenType::ParenClose {
+                break;
+            }
+
+            let selector = self.parse_selector_until_comma_or_close()?;
+            if !selector.is_empty() {
+                selectors.push(selector);
+            }
+
+            if self.peek().token_type == TokenType::Comma {
+                self.advance();
+            } else {
+                break;
+            }
+        }
+
+        Ok(selectors)
+    }
+
+    /// Parse a single selector, stopping at comma or closing parenthesis.
+    fn parse_selector_until_comma_or_close(&mut self) -> Result<Selector, SelectorError> {
+        let mut parts = Vec::new();
+
+        loop {
+            // Check for combinator
+            let combinator = if self.peek().token_type == TokenType::Combinator {
+                let token = self.advance();
+                let comb = match token.value.as_deref() {
+                    Some(" ") => Combinator::Descendant,
+                    Some(">") => Combinator::Child,
+                    Some("+") => Combinator::Adjacent,
+                    Some("~") => Combinator::Sibling,
+                    _ => Combinator::Descendant,
+                };
+                Some(comb)
+            } else if !parts.is_empty() {
+                None
+            } else {
+                None
+            };
+
+            // Parse compound selector
+            let simple_selectors = self.parse_compound_selector()?;
+            if simple_selectors.is_empty() {
+                break;
+            }
+
+            parts.push(SelectorPart {
+                combinator: if parts.is_empty() { None } else { combinator },
+                selectors: simple_selectors,
+            });
+
+            // Check if we should continue - stop at comma or close paren
+            if self.at_end()
+                || self.peek().token_type == TokenType::Comma
+                || self.peek().token_type == TokenType::ParenClose
+            {
+                break;
+            }
+        }
+
+        Ok(Selector { parts })
     }
 
     /// Parse a single selector (sequence of compound selectors).
@@ -246,6 +329,7 @@ impl SelectorParser {
                 name,
                 op: AttributeOp::Exists,
                 value: None,
+                case_insensitive: false,
             });
         }
 
@@ -275,13 +359,31 @@ impl SelectorParser {
             return Err(SelectorError("Expected attribute value".to_string()));
         };
 
+        // Skip any whitespace/combinator tokens before the case-insensitive flag
+        while self.peek().token_type == TokenType::Combinator {
+            self.advance();
+        }
+
+        // Check for case-insensitive flag (i or I)
+        let case_insensitive = if self.peek().token_type == TokenType::Tag {
+            let peeked = self.peek().value.as_deref();
+            if peeked == Some("i") || peeked == Some("I") {
+                self.advance();
+                true
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+
         // Expect ]
         if self.peek().token_type != TokenType::AttrEnd {
             return Err(SelectorError("Expected ]".to_string()));
         }
         self.advance();
 
-        Ok(SimpleSelector::Attribute { name, op, value })
+        Ok(SimpleSelector::Attribute { name, op, value, case_insensitive })
     }
 
     /// Parse a pseudo-class selector.
@@ -308,6 +410,20 @@ impl SelectorParser {
                 }
                 self.advance();
                 return Ok(SimpleSelector::Not(Box::new(inner)));
+            }
+
+            if name == "is" || name == "where" {
+                // Parse selector list for :is() and :where()
+                let selectors = self.parse_selector_list_until_close()?;
+                if self.peek().token_type != TokenType::ParenClose {
+                    return Err(SelectorError(format!("Expected ) in :{}()", name)));
+                }
+                self.advance();
+                return Ok(if name == "is" {
+                    SimpleSelector::Is(selectors)
+                } else {
+                    SimpleSelector::Where(selectors)
+                });
             }
 
             // Parse argument for other pseudo-classes
@@ -420,7 +536,7 @@ mod tests {
         let result = parse_selector("[disabled]").unwrap();
         assert!(matches!(
             &result.selectors[0].parts[0].selectors[0],
-            SimpleSelector::Attribute { name, op: AttributeOp::Exists, value: None } if name == "disabled"
+            SimpleSelector::Attribute { name, op: AttributeOp::Exists, value: None, .. } if name == "disabled"
         ));
     }
 
@@ -429,7 +545,7 @@ mod tests {
         let result = parse_selector("[type=\"text\"]").unwrap();
         assert!(matches!(
             &result.selectors[0].parts[0].selectors[0],
-            SimpleSelector::Attribute { name, op: AttributeOp::Exact, value: Some(v) }
+            SimpleSelector::Attribute { name, op: AttributeOp::Exact, value: Some(v), .. }
             if name == "type" && v == "text"
         ));
     }

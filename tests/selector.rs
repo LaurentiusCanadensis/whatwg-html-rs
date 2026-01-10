@@ -854,7 +854,6 @@ fn test_nth_last_of_type() {
 }
 
 #[test]
-#[ignore = "case-insensitive attribute flag (i) not yet implemented"]
 fn test_attribute_case_insensitive_flag() {
     let html = "<div data-value=\"ABC\"></div><div data-value=\"abc\"></div>";
     // With case-insensitive flag (i)
@@ -979,35 +978,30 @@ fn test_checked_inputs() {
 // ==================== Form Pseudo-classes ====================
 
 #[test]
-#[ignore = ":required pseudo-class not yet implemented"]
 fn test_required_pseudo_class() {
     let html = r#"<input required><input><textarea required></textarea>"#;
     assert_eq!(query_count(html, ":required"), 2);
 }
 
 #[test]
-#[ignore = ":optional pseudo-class not yet implemented"]
 fn test_optional_pseudo_class() {
     let html = r#"<input required><input><textarea></textarea>"#;
     assert_eq!(query_count(html, ":optional"), 2);
 }
 
 #[test]
-#[ignore = ":read-only pseudo-class not yet implemented"]
 fn test_read_only_pseudo_class() {
     let html = r#"<input readonly><input><textarea readonly></textarea>"#;
     assert_eq!(query_count(html, ":read-only"), 2);
 }
 
 #[test]
-#[ignore = ":read-write pseudo-class not yet implemented"]
 fn test_read_write_pseudo_class() {
     let html = r#"<input readonly><input><textarea></textarea>"#;
     assert_eq!(query_count(html, ":read-write"), 2);
 }
 
 #[test]
-#[ignore = ":placeholder-shown pseudo-class not yet implemented"]
 fn test_placeholder_shown_pseudo_class() {
     let html = r#"<input placeholder="Enter name"><input>"#;
     assert_eq!(query_count(html, ":placeholder-shown"), 1);
@@ -1016,14 +1010,12 @@ fn test_placeholder_shown_pseudo_class() {
 // ==================== CSS4 Selectors ====================
 
 #[test]
-#[ignore = ":is() pseudo-class not yet implemented"]
 fn test_is_pseudo_class() {
     let html = "<article><h1>T</h1></article><section><h1>T</h1></section><div><h1>T</h1></div>";
     assert_eq!(query_count(html, ":is(article, section) h1"), 2);
 }
 
 #[test]
-#[ignore = ":where() pseudo-class not yet implemented"]
 fn test_where_pseudo_class() {
     let html = "<article><p>A</p></article><div><p>D</p></div>";
     assert_eq!(query_count(html, ":where(article, section) p"), 1);
@@ -1255,7 +1247,6 @@ fn test_selector_list_whitespace() {
 // ==================== Structural Edge Cases ====================
 
 #[test]
-#[ignore = ":only-child should skip text nodes - not yet implemented"]
 fn test_only_child_with_text_siblings() {
     // Text nodes don't count for :only-child per CSS spec
     let html = "<div>Text before<span>Only element</span>Text after</div>";
@@ -1263,14 +1254,12 @@ fn test_only_child_with_text_siblings() {
 }
 
 #[test]
-#[ignore = ":first-child should skip comments - not yet implemented"]
 fn test_first_child_after_comment() {
     let html = "<div><!-- comment --><p>First</p></div>";
     assert_eq!(query_count(html, "p:first-child"), 1);
 }
 
 #[test]
-#[ignore = ":last-child should skip comments - not yet implemented"]
 fn test_last_child_before_comment() {
     let html = "<div><p>Last</p><!-- comment --></div>";
     assert_eq!(query_count(html, "p:last-child"), 1);
